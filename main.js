@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 // See LICENSE for details
 
-const {app, BrowserWindow, Menu, protocol, ipcMain} = require('electron');
+const {app, BrowserWindow, dialog, Menu, protocol, ipcMain} = require('electron');
 const log = require('electron-log');
 const {autoUpdater} = require("electron-updater");
 
@@ -87,6 +87,22 @@ autoUpdater.on('download-progress', (progressObj) => {
 })
 autoUpdater.on('update-downloaded', (info) => {
   sendStatusToWindow('Update downloaded');
+ 
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['立即安装并重启', '晚些再安装'],
+    title: '应用更新',
+    message: info.releaseName,
+    detail: '新版本('+ info.version + ')程序已经下载成功，请重启并安装新版本。'
+  }
+
+  dialog.showMessageBox(dialogOpts, (response) => {
+    if (response === 0){
+      setTimeout(function() {
+        autoUpdater.quitAndInstall();  
+      }, 5000)
+    } 
+  })
 });
 app.on('ready', function() {
   // Create the Menu
@@ -110,7 +126,8 @@ app.on('window-all-closed', () => {
 // app quits.
 //-------------------------------------------------------------------
 app.on('ready', function()  {
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
+  // autoUpdater.checkForUpdatesAndNotify();
 });
 
 //-------------------------------------------------------------------
